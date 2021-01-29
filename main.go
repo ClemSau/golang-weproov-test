@@ -31,7 +31,6 @@ type Author struct {
 	Name string `json:"name,omitempty"`
 }
 
-var articles []Article
 var db *gorm.DB
 var err error
 
@@ -95,6 +94,19 @@ func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&articles)
 }
 
+// UpdateArticle update a given article
+func UpdateArticle(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var article Article
+	db.First(&article, params["id"])
+	var newArticle Article
+	_ = json.NewDecoder(r.Body).Decode(&article)
+	article.Title = newArticle.Title
+	article.Content = newArticle.Content
+	article.Author = newArticle.Author
+	db.Save(&article)
+}
+
 // GetAuthors return the list of all the authors
 func GetAuthors(w http.ResponseWriter, r *http.Request) {
 	var authors []Author
@@ -130,7 +142,6 @@ func DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	router := mux.NewRouter()
-	articles = append(articles, Article{ID: "1", Title: "My first article", Content: "This is the content of the first article", Author: Author{ID: "1", Name: "Jhon Doe"}})
 
 	err := godotenv.Load(".env")
 	CheckError(err)
@@ -147,10 +158,12 @@ func main() {
 	router.HandleFunc("/articles/{id}", GetArticle).Methods("GET")
 	router.HandleFunc("/articles/{id}", CreateArticle).Methods("CREATE")
 	router.HandleFunc("/articles/{id}", DeleteArticle).Methods("DELETE")
+	router.HandleFunc("/articles/{id}", UpdateArticle).Methods("UPDATE")
 	router.HandleFunc("/authors", GetAuthors).Methods("GET")
 	router.HandleFunc("/authors/{id}", GetAuthor).Methods("GET")
 	router.HandleFunc("/authors/{id}", CreateAuthor).Methods("CREATE")
 	router.HandleFunc("/authors/{id}", DeleteAuthor).Methods("DELETE")
+	router.HandleFunc("/authors/{id}", UpdateAuthor).Methods("UPDATE")
 
 	handler := cors.Default().Handler(router)
 
