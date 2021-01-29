@@ -126,7 +126,6 @@ func DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	var authors []Author
 	db.Find(&authors)
 	json.NewEncoder(w).Encode(&authors)
-
 }
 
 func main() {
@@ -146,13 +145,14 @@ func main() {
 
 	router.HandleFunc("/articles", GetArticles).Methods("GET")
 	router.HandleFunc("/articles/{id}", GetArticle).Methods("GET")
+	router.HandleFunc("/articles/{id}", CreateArticle).Methods("CREATE")
 	router.HandleFunc("/articles/{id}", DeleteArticle).Methods("DELETE")
 	router.HandleFunc("/authors", GetAuthors).Methods("GET")
 	router.HandleFunc("/authors/{id}", GetAuthor).Methods("GET")
+	router.HandleFunc("/authors/{id}", CreateAuthor).Methods("CREATE")
 	router.HandleFunc("/authors/{id}", DeleteAuthor).Methods("DELETE")
 
 	handler := cors.Default().Handler(router)
 
 	log.Fatal(http.ListenAndServe(":8080", handler))
-
 }
