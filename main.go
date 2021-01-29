@@ -140,6 +140,17 @@ func DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&authors)
 }
 
+// UpdateAuthor update a given author
+func UpdateAuthor(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var author Author
+	db.First(&author, params["id"])
+	var newAuthor Author
+	_ = json.NewDecoder(r.Body).Decode(&author)
+	author.Name = newAuthor.Name
+	db.Save(&author)
+}
+
 func main() {
 	router := mux.NewRouter()
 
