@@ -39,6 +39,12 @@ func main() {
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
 
+	db := OpenDb(host, port, user, password, dbname)
+
+}
+
+// OpenDb open the connexion to the psql database
+func OpenDb(host string, port string, user string, password string, dbname string) *sql.DB {
 	psqlconn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	// open database
@@ -54,6 +60,7 @@ func main() {
 
 	fmt.Println("Connected!")
 
+	return db
 }
 
 // CheckError stop the program if an error is detected
