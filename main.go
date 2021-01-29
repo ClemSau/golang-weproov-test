@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gorilla/mux"
+	_ "github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -13,6 +17,7 @@ import (
 
 // Article is a blog article
 type Article struct {
+	gorm.Model
 	ID      string `json:"id,omitempty"`
 	Title   string `json:"title,omitempty"`
 	Content string `json:"content,omitempty"`
@@ -21,6 +26,7 @@ type Article struct {
 
 // Author is a author of blog articles
 type Author struct {
+	gorm.Model
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }
@@ -28,6 +34,7 @@ type Author struct {
 var articles []Article
 
 func main() {
+	router := mux.NewRouter()
 	articles = append(articles, Article{ID: "1", Title: "My first article", Content: "This is the content of the first article", Author: Author{ID: "1", Name: "Jhon Doe"}})
 
 	err := godotenv.Load(".env")
