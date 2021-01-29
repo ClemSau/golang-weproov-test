@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -10,6 +13,7 @@ import (
 	_ "github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 // Objects
@@ -31,26 +35,11 @@ type Author struct {
 }
 
 var articles []Article
-
-func main() {
-	router := mux.NewRouter()
-	articles = append(articles, Article{ID: "1", Title: "My first article", Content: "This is the content of the first article", Author: Author{ID: "1", Name: "Jhon Doe"}})
-
-	err := godotenv.Load(".env")
-	CheckError(err)
-
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USERNAME")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-
-	db := OpenDb(host, port, user, password, dbname)
-
-}
+var db *gorm.DB
+var err error
 
 // OpenDb open the connexion to the psql database
-func OpenDb(host string, port string, user string, password string, dbname string) *gorm.DB {
+func OpenDb(host string, port string, user string, password string, dbname string) {
 	psqlconn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	// open database
@@ -65,8 +54,6 @@ func OpenDb(host string, port string, user string, password string, dbname strin
 	db.AutoMigrate(&Article{})
 
 	db.AutoMigrate(&Author{})
-
-	return db
 }
 
 // CheckError stop the program if an error is detected
@@ -74,4 +61,87 @@ func CheckError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Endpoints
+
+// GetArticles return the list of all the articles
+func GetArticles(w http.ResponseWriter, r *http.Request) {
+	var articles []Article
+	db.Find(&articles)
+	json.NewEncoder(w).Encode(&articles)
+}
+
+// GetArticle return an article by id
+func GetArticle(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var article Article
+	db.First(&article, params["id"])
+	json.NewEncoder(w).Encode(&article)
+}
+
+// DeleteArticle delete an article by id
+func DeleteArticle(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var article Article
+	db.First(&article, params["id"])
+	db.Delete(&article)
+	var articles []Article
+	db.Find(&articles)
+	json.NewEncoder(w).Encode(&articles)
+}
+
+// GetAuthors return the list of all the authors
+func GetAuthors(w http.ResponseWriter, r *http.Request) {
+	var authors []Author
+	db.Find(&authors)
+	json.NewEncoder(w).Encode(&authors)
+}
+
+// GetAuthor return an author by id
+func GetAuthor(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var author Author
+	db.First(&author, params["id"])
+	json.NewEncoder(w).Encode(&author)
+}
+
+// DeleteAuthor delete an author by id
+func DeleteAuthor(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var author Article
+	db.First(&author, params["id"])
+	db.Delete(&author)
+	var authors []Author
+	db.Find(&authors)
+	json.NewEncoder(w).Encode(&authors)
+
+}
+
+func main() {
+	router := mux.NewRouter()
+	articles = append(articles, Article{ID: "1", Title: "My first article", Content: "This is the content of the first article", Author: Author{ID: "1", Name: "Jhon Doe"}})
+
+	err := godotenv.Load(".env")
+	CheckError(err)
+
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+
+	OpenDb(host, port, user, password, dbname)
+
+	router.HandleFunc("/articles", GetArticles).Methods("GET")
+	router.HandleFunc("/articles/{id}", GetArticle).Methods("GET")
+	router.HandleFunc("/articles/{id}", DeleteArticle).Methods("DELETE")
+	router.HandleFunc("/authors", GetAuthors).Methods("GET")
+	router.HandleFunc("/authors/{id}", GetAuthor).Methods("GET")
+	router.HandleFunc("/authors/{id}", DeleteAuthor).Methods("DELETE")
+
+	handler := cors.Default().Handler(router)
+
+	log.Fatal(http.ListenAndServe(":8080", handler))
+
 }
