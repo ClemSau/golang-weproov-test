@@ -8,11 +8,8 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	_ "github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
 
@@ -80,6 +77,13 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&article)
 }
 
+// CreateArticle create an article with the given arguments
+func CreateArticle(w http.ResponseWriter, r *http.Request) {
+	var article Article
+	_ = json.NewDecoder(r.Body).Decode(&article)
+	db.Create(&article)
+}
+
 // DeleteArticle delete an article by id
 func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -104,6 +108,13 @@ func GetAuthor(w http.ResponseWriter, r *http.Request) {
 	var author Author
 	db.First(&author, params["id"])
 	json.NewEncoder(w).Encode(&author)
+}
+
+// CreateAuthor create an author with the given arguments
+func CreateAuthor(w http.ResponseWriter, r *http.Request) {
+	var author Author
+	_ = json.NewDecoder(r.Body).Decode(&author)
+	db.Create(&author)
 }
 
 // DeleteAuthor delete an author by id
