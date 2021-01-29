@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 
@@ -51,21 +50,21 @@ func main() {
 }
 
 // OpenDb open the connexion to the psql database
-func OpenDb(host string, port string, user string, password string, dbname string) *sql.DB {
+func OpenDb(host string, port string, user string, password string, dbname string) *gorm.DB {
 	psqlconn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	// open database
-	db, err := sql.Open("postgres", psqlconn)
+	db, err := gorm.Open("postgres", psqlconn)
 	CheckError(err)
 
 	// close database
 	defer db.Close()
 
-	// check db
-	err = db.Ping()
-	CheckError(err)
-
 	fmt.Println("Connected!")
+
+	db.AutoMigrate(&Article{})
+
+	db.AutoMigrate(&Author{})
 
 	return db
 }
